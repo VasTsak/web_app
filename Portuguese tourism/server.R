@@ -1,0 +1,140 @@
+require(dygraphs)
+require(shiny)
+shinyServer(function(input, output) {
+  forecastedTS=reactive({ if (input$region ==1){
+    nights=nights_Alc
+    timeseries=cbind("ARIMA"=final_Alc,"HW Additive"=AlcA,"HW Multiplicative"=AlcM)
+  }else if (input$region==2){
+    nights=nights_Alg
+    timeseries=cbind("ARIMA"=final_Alg,"HW Additive"=AlgA,"HW Multiplicative"=AlgM)
+  }else if (input$region==3){
+    nights=nights_AML
+    timeseries=cbind("ARIMA"=final_AML,"HW Additive"=AMLA,"HW Multiplicative"=AMLM)
+  }else if (input$region==4){
+    nights=nights_Cen
+    timeseries=cbind("ARIMA"=final_Cen,"HW Additive"=CenA,"HW Multiplicative"=CenM)
+  }else if (input$region==5){
+    nights=nights_Nor
+    timeseries=cbind("ARIMA"=final_Nor,"HW Additive"=NorA,"HW Multiplicative"=NorM)
+  }else if (input$region==6){
+    nights=nights_RAM
+    timeseries=cbind("ARIMA"=final_RAM,"HW Additive"=RAMA,"HW Multiplicative"=RAMM)
+  }else{
+    nights=nights_RAA
+    timeseries=cbind("ARIMA"=final_RAA,"HW Additive"=RAAA,"HW Multiplicative"=RAAM)
+  }
+    })
+  blah1=reactive({ if (input$region ==1){
+    Arima_Alc=final_Alc
+  }else if (input$region==2){
+    Arima_Alg=final_Alg
+  }else if (input$region==3){
+    Arima_AML=final_AML
+  }else if (input$region==4){
+    Arima_Cen=final_Cen
+  }else if (input$region==5){
+    Arima_Nor=final_Nor
+  }else if (input$region==6){
+    Arima_RAM=final_RAM
+  }else{
+    Arima_RAA=final_RAA
+  }
+  })
+  
+  nights=reactive({ if (input$region ==1){
+    nights=nights_Alc
+  }else if (input$region==2){
+    nights=nights_Alg
+  }else if (input$region==3){
+    nights=nights_AML
+  }else if (input$region==4){
+    nights=nights_Cen
+  }else if (input$region==5){
+    nights=nights_Nor
+  }else if (input$region==6){
+    nights=nights_RAM
+  }else{
+    nights=nights_RAA
+  }
+  })
+  
+  residuals=reactive({ if (input$region ==1){
+    residuals=residuals_Alc
+  }else if (input$region==2){
+    residuals=residuals_Alg
+  }else if (input$region==3){
+    residuals=residuals_AML
+  }else if (input$region==4){
+    residuals=residuals_Cen
+  }else if (input$region==5){
+    residuals=residuals_Nor
+  }else if (input$region==6){
+    residuals=residuals_RAM
+  }else{
+    residuals=residuals_RAA
+  }
+  })
+  
+  
+  predictedHW <- reactive({
+    if (input$radio ==1 ){
+   hw <- HoltWinters(nights(), seasonal= "additive")
+    predict(hw, n.ahead = input$months, 
+            prediction.interval = TRUE,
+            level = as.numeric(input$interval))}
+    else{
+      hw <- HoltWinters(nights(), seasonal= "multiplicative")
+      predict(hw, n.ahead = input$months, 
+              prediction.interval = TRUE,
+              level = as.numeric(input$interval))
+    }
+  })
+ 
+  output$dygraph1 <- renderDygraph({
+    dygraph(forecastedTS(), main = "Predicted Nights") %>%
+      dySeries("ARIMA", label = "ARIMA") %>%
+      dySeries("HW Additive", label = "HW Additive") %>%
+      dySeries("HW Multiplicative", label = "HW Multiplicative") %>%
+      dyOptions(stackedGraph = TRUE,drawGrid = input$showgrid)%>%
+      dyRangeSelector(height = 20)
+    })
+  output$decompose <-renderPlot({
+    plot(decompose(blah1()))
+  })
+  
+  output$plot <-renderPlot({
+    tsdisplay(nights(), main = "Nights'Display")
+  })
+  output$residuals <-renderPlot({
+    tsdisplay(residuals(), main = "Residuals'Display")
+  })
+  report=reactive({
+    if (input$region ==1){
+      Description <- "First things first, looking at the time series' display plots we have an idea about the seasonality and trend of the Alentejo's time series.It is obvious that the time series has a high degree of seasonality and the year 2015 may be the starting date of a trend but it is too early to say. Also it is safe to say that  the residuals don't follow a white noise process and we need to make some modifications. Firstly we have modified the time series with the logarithm function. After that it is necessary to apply a seasonal difference. We came up with the ARIMA model (0,0,1)(1,1,2) Unfortunately that wasn't enough in order to reach a good enough prediction , so another seasonal difference was applied as well as a first difference . The ARIMA model that seems to fit the pattern is ARIMA(3,1,0)(1,2,2) also the  residuals of that seems to follow a white noise process. Apart from that , we have applied the additive and multiplicative Holt-Winters methods. Judging by the seasonality and variation the additive is more adequate model to apply. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab."
+    }else if (input$region==2){
+      Description <- "Looking the plot we can safely assume that the series is seasonal. In the Display tab it is the time series displayed with the ACF and PACF plots . It is obvious that the time series doesn't follow a white noise process and we need to make some modifications apart from the seasonality there is the suspicion of a trend . Firstly we have modified the time series with the logarithm function. After that it is necessary to apply  a seasonal difference. After those transformations we can come up with an ARIMA model . The ARIMA model that seems to fit the pattern is ARIMA(2,0,0)(2,1,0) also the  residuals of that seems to follow a white noise process.  Over all this ARIMA model seems to adapt quite well at the prediction. Apart from that , we have applied the additive and multiplicative Holt-Winters methods. Judging by the seasonality and variation the additive is more adequate model to apply. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab."
+    }else if (input$region==3){
+      Description <-"Taking a look at the Area Metropolitana de Lisboa It is obvious that the time series has a high degree of seasonality and a lightly upward trend, but it doesn't follow a white noise process and we need to make some modifications apart from the seasonality there is the suspicion of a trend . Firstly we have modified the time series with the logarithm function. After that it is necessary to apply  a seasonal difference. After those transformations we can come up with an ARIMA model . The ARIMA model that seems to fit the pattern is ARIMA(1,0,0)(1,1,0) but the model doesn't seem to be adequate for the current pattern. So we apply a second seasonal difference and we obtain a more accurate model. The ARIMA model that we used for the prediction is ARIMA(3,0,0)(2,2,1).The  residuals of that model seems to follow a white noise process. In general this ARIMA model seems to adapt quite well at the prediction. Apart from that , we have applied the additive and multiplicative Holt-Winters methods. Judging by the seasonality and variation the additive is more adequate model to apply. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab."
+    }else if (input$region==4){
+      Description<-"The Centro time series has also a high seasonality and a highly upwarded trend . It is obvious that the time series doesn't follow a white noise process and we need to make some modifications apart from the seasonality there is a developing trend . Firstly we have modified the time series with the logarithm function. After that it is necessary to apply  a seasonal difference. Unfortunately it is not quite clear which model to select but we can roughly estimate the model that can be adequate. We tried some more modifications but it didn't help us much so we stuck to simple model with the seasonal difference modification. The model that is chosen is the ARIMA(0,1,1)(1,1,1). The  residuals of that model follow a white noise process. In general this ARIMA model seems to adapt quite well at the prediction. Apart from that , we have applied the additive and multiplicative Holt-Winters methods. Judging by the seasonality and variation the additive is more adequate model to apply. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab. Regarding the Holt-Winters plot , it is possible to change some parameters like the model ( additive or multiplicative ) where you can actually see the difference between the two models  , also the number of predicted months as well as the prediction interval. "
+    }else if (input$region==5){
+      Description<-"Looking the plot we can assume that the series is seasonal with a wild trend at the last two years . In the Display tab it is the time series displayed with the ACF and PACF plots . It is obvious that the time series residuals don't follow a white noise process and we need to make some modifications  . Firstly we have modified the time series with the logarithm function in order to moderate the trend and the variation .  After that it is necessary to apply  a seasonal difference. Unfortunately it is not quite clear which model to select but we can roughly estimate the model that can be adequate. The ARIMA model we believe is adequate is ARIMA(2,0,0),(1,1,0) it seems to be good , but we tried to take the first difference and we came up with the model ARIMA(0,0,1)(1,1,1) but it is not better than the previous one so we stick with the former. The  residuals of that model follow a white noise process. In general this ARIMA model seems to adapt quite well at the prediction. Apart from that , we have applied the additive and multiplicative Holt-Winters methods. In this case , with the trend we face the multiplication can be also a good choice. But after the comparison between them , the additive model seems to be better. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab."
+    }else if (input$region==6){
+      Description<-"The Regiao Autonoma da Madeira time series with high seasonality and a weird trend can be a problem at the prediction . It is obvious that the time series doesn't follow a white noise process and we need to make some modifications apart from the seasonality there is developing a trend . Firstly we have modified the time series with the logarithm function. After that it is necessary to apply  a seasonal difference. No further modification is needed and it is kind of obvious of the model we need to apply. The model that is chosen is the ARIMA(0,0,1)(0,1,1). The  residuals of that model follow a white noise process. In general this ARIMA model seems to adapt quite well at the prediction. Apart from that , we have applied the additive and multiplicative Holt-Winters methods. Judging by the seasonality and variation the additive is more adequate model to apply. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab."
+    }else{
+      Description<-"From the Regiao de Acores' plot we can assume that the series is seasonal with a potential trend with great potential at the last year . In the Display tab it is the time series displayed with the ACF and PACF plots . It is obvious that the time series residuals don't follow a white noise process and we need to make some modifications  . Firstly we have modified the time series with the logarithm function in order to moderate the trend and the variations .  After that it is necessary to apply  a seasonal difference in order to get rid of seasonality. We are lucky enough to have a clear picture of the model that needs to be applied. The ARIMA model we use is ARIMA(1,0,0)(1,1,0). The  residuals of that model follow a white noise process with just one outlier which is acceptable due to the number of observations. In general this ARIMA model seems to recognizes the pattern and adapt quite well at the prediction. Apart from this method , we have applied the additive and multiplicative Holt-Winters methods. In this case , with the trend we face the multiplication can potentially be also a good choice. But after the comparison between them , the additive model seems to be better. This claim is supported by the illustration in the Comparison Plot tab and in greater detail in the Holt Winters Plot tab."
+    }
+  })
+  output$text1 <- renderText({ 
+  print(report())
+  })
+  
+  output$dygraph2<- renderDygraph({dygraph(blah1(), main = "Arima Prediction")%>%
+      dySeries("V1", strokeWidth = 2, strokePattern = "dashed")
+  })
+  output$dygraph3 <- renderDygraph({
+    dygraph(predictedHW(), main = "Predicted Nights") %>%
+      dySeries(c("lwr", "fit", "upr"), label = "# of nights") %>%
+      dyOptions(drawGrid = input$showgrid)
+  })
+  })
