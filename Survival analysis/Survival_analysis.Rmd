@@ -234,5 +234,5 @@ ui <- fluidPage(titlePanel("Survival Analysis"),
                     ))
                   ))
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 1080))
 ```
