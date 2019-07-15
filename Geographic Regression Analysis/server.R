@@ -1,72 +1,30 @@
 options(shiny.maxRequestSize = 9*1024^2)
-library(XLConnect)
 library(ggplot2)
 
 shinyServer(function(input, output) {
-  blah=reactive({inFile <- input$file1
-  readWorksheetFromFile(inFile$datapath, sheet=1)}) 
+  d=reactive({inFile <- input$file1
+  read.csv(inFile$datapath)}) 
   output$contents <- renderTable({
-    blah()
+    d()
   })
   
   x=reactive({ 
-    # df <- blah()
-    # nam <- names(df)[-c(1,10:12)]
-    # 
-    # inp <- as.integer(input$select)
-    # 
-    # res <- nam[inp]
-    # 
-    # print(res)
     as.integer(input$region)
-  #   if (input$region ==1){
-  #   blah()$kerja
-  # }else if (input$region==2){
-  #   blah()$pertanian	
-  # }else if (input$region==3){
-  #   blah()$hotel
-  # }else if (input$region==4){
-  #   blah()$ipm
-  # }else if (input$region==5){
-  #   blah()$pmdn
-  # }else if (input$region==6){
-  #   blah()$pma
-  # }else if (input$region==7){
-  #   blah()$wisatawan
-  # }else{
-  #   blah()$penduduk	
-  # }
-    
-    
-    
+  
   })
  
-  
-  
-  
-  
-  
-  
   output$plot <-renderPlot({
     if (input$select==3){
 
-      df <- blah()
+      df <- d()
       nam.all <- names(df)[-c(1,10:12)]
       inp <- x()
       nam.checkbox <- nam.all[inp[1]]
-      #nam.add <- c(nam.checkbox,"y")
       df.sub <- df[,c(nam.checkbox,"y")]
 
-       #
-       # plot(x(),blah()$y,data=blah())
-       # abline(lm(blah()$y ~ x(),data=blah()))
-
-     df <- blah()
+     df <- d()
      p <- ggplot(data = df.sub, aes(x = df.sub[,1], y = y)) +
        geom_smooth(method = "lm", se=FALSE, color="blue", size=0.5) +
-       # stat_poly_eq(formula = my.formula,
-       #              aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
-       #              parse = TRUE) +
        geom_point(color="black",size=3) +
        ggtitle("Regression")
 
@@ -76,23 +34,7 @@ shinyServer(function(input, output) {
 
     if (input$select==2){
 
-
-      # df <- blah()
-      # nam.all <- names(df)[-c(1,10:12)]
-      # inp <- x()
-      # nam.checkbox <- nam.all[inp[1]]
-      # #nam.add <- c(nam.checkbox,"y")
-      # df.sub <- df[,c(nam.checkbox,"y")]
-
-
-      # gwr.bw <- gwr.sel(y~ .,
-      #                   data=df.sub, coords=cbind(df$latitude,df$longitude))
-      #
-      #
-      # model <-  gwr(y ~ .,data = df.sub,
-      #               coords=cbind(df$latitude, df$longitude),
-      #               bandwidth = gwr.bw, hatmatrix=TRUE)
-      df <- blah()
+      df <- d()
 
       gwr.bw <- gwr.sel(y~ kerja+pertanian+hotel+ipm+pmdn+pma+wisatawan+penduduk,
                         data=df, coords=cbind(df$latitude,df$longitude))
@@ -111,27 +53,6 @@ shinyServer(function(input, output) {
       df$coefpma <- results$pma
       df$coefwisatawan <- results$wisatawan
       df$coefpenduduk <- results$penduduk
-
-
-
-      #
-      # if (input$region ==1){
-      #   reg = "kerja"
-      # }else if (input$region==2){
-      #   reg = "pertanian"
-      # }else if (input$region==3){
-      #   reg = "hotel"
-      # }else if (input$region==4){
-      #   reg = "ipm"
-      # }else if (input$region==5){
-      #   reg = "pmdn"
-      # }else if (input$region==6){
-      #   reg = "pma"
-      # }else if (input$region==7){
-      #   reg = "wisatawan"
-      # }else{
-      #   reg = "penduduk"}
-
 
       if (1 %in% input$region){
        reg = "kerja"
@@ -156,30 +77,17 @@ shinyServer(function(input, output) {
 
       gwr.plot <- ggplot(df, aes(x=latitude,y=longitude))+
       geom_point(aes(colour=coefvar))+
-      scale_colour_gradient2(low = "red", mid = "white", high = "blue", #, midpoint = 0
-                               #  , space = "rgb")
+      scale_colour_gradient2(low = "red", mid = "white", high = "blue", 
                                na.value = "grey50", guide = "colourbar", guide_legend(title="Coefs"))
       print(gwr.plot)
     }
   })
   
-  # output$plotGWR <-renderPlot({
-  #   if (input$select==3){
-  #     plot(x(),blah()$y,data=blah())
-  #     abline(lm(blah()$y ~ x(),data=blah()))
-  #   }
-  # })
-  
-  # output$text0 <- renderPrint({ 
-  #   print(names(df))
-  #   print(summary(lm( blah()$y ~ x(), data=blah()  ) ))
-  # })
-  # 
   output$text1 <- renderPrint({ 
     
     if (input$select==3){
 
-      df <- blah()
+      df <- d()
       nam.all <- names(df)[-c(1,10:12)]
       inp <- x()
       nam.checkbox <- nam.all[inp]
@@ -197,24 +105,15 @@ shinyServer(function(input, output) {
      (wh <- which( mod$coeff[-1,4] < 0.05))
      (var.nam <- row.names(mod$coeff)[-1] )
      print(var.nam[wh])
-
-    #print(names(df)[mod$coeff[-1,4] < 0.05])
-    
-    #print(summary(lm( y ~ kerja+pertanian+hotel+ipm+pmdn+pma+wisatawan+penduduk, data=blah()  ) ))
-    
-    
     }
     
     if (input$select==1){
-    #   
-    # print(names(df))
-    # print(summary(lm( blah()$y ~ x(), data=blah()  ) ))
     }
     
     if (input$select==2){
       
       
-      df <- blah()
+      df <- d()
       nam.all <- names(df)[-c(1,10:12)]
       inp <- x()
       nam.checkbox <- nam.all[inp]
@@ -222,17 +121,11 @@ shinyServer(function(input, output) {
       df.sub <- df[,nam.checkbox] 
     
       gwr.bw <- gwr.sel(y~.,
-                        data=df.sub, coords=cbind(blah()$latitude,blah()$longitude))
+                        data=df.sub, coords=cbind(d()$latitude,d()$longitude))
       
       model <- gwr(y ~ . ,data = df.sub,
-                   coords=cbind(blah()$latitude, blah()$longitude),
+                   coords=cbind(d()$latitude, d()$longitude),
                    bandwidth = gwr.bw, hatmatrix=TRUE)
-    #   
-    # gwr.bw <- gwr.sel(y~ kerja+pertanian+hotel+ipm+pmdn+pma+wisatawan+penduduk,
-    #                   data=blah(), coords=cbind(blah()$latitude,blah()$longitude))
-    # model <- gwr(y ~ kerja+pertanian+hotel+ipm+pmdn+pma+wisatawan+penduduk,data =blah(),
-    #              coords=cbind(blah()$latitude, blah()$longitude),
-    #              bandwidth = gwr.bw, hatmatrix=TRUE)
     print(model)
     
     print("")
@@ -276,9 +169,4 @@ shinyServer(function(input, output) {
     }
     
     })
-  
-  # output$text2 <- renderPrint({ 
-  # 
-  #   
-  # })
 })
