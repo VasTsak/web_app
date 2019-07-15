@@ -11,7 +11,7 @@ Feel free to play around with the various independent variables.
 
 install.packages("spgwr")
 
-install.packages("ggplot2")`
+install.packages("ggplot2")'
 
 ## Status
 [![Build Status](https://travis-ci.com/username/projectname.svg?branch=master)](https://travis-ci.com/username/projectname)
