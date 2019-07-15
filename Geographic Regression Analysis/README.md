@@ -8,7 +8,9 @@ Feel free to play around with the various independent variables.
 ## Installations
 
 `'install.packages("shiny")
+
 install.packages("spgwr")
+
 install.packages("ggplot2")`
 
 ## Status
